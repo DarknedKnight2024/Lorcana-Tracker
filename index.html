@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lorcana Collection & Price Tracker</title>
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --bg-input: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #f59e0b;
+      --accent-hover: #d97706;
+      --border: #334155;
+      --success: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      padding: 20px;
+      line-height: 1.5;
+    }
+
+    header {
+      max-width: 1400px;
+      margin: 0 auto 24px auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 20px;
+      background: var(--bg-card);
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--success);
+    }
+
+    .controls {
+      max-width: 1400px;
+      margin: 0 auto 24px auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      background: var(--bg-card);
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      color: var(--text-main);
+      font-size: 0.9rem;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid var(--accent);
+    }
+
+    button {
+      background: var(--accent);
+      color: #000;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+    }
+
+    button.secondary {
+      background: var(--bg-input);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+    }
+
+    button.secondary:hover {
+      background: #475569;
+    }
+
+    .card-grid {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.15s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+    }
+
+    .card.owned {
+      border-color: var(--success);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+    }
+
+    .card-img-wrap {
+      position: relative;
+      background: #0b1120;
+      padding: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 280px;
+    }
+
+    .card-img-wrap img {
+      max-width: 100%;
+      max-height: 260px;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+
+    .badge-ink {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(15, 23, 42, 0.85);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }
+
+    .badge-cost {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--accent);
+      color: #000;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    .card-body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      gap: 8px;
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .card-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: -6px;
+    }
+
+    .card-stats {
+      display: flex;
+      gap: 10px;
+      font-size: 0.8rem;
+      background: rgba(15, 23, 42, 0.5);
+      padding: 6px 8px;
+      border-radius: 6px;
+    }
+
+    .price-box {
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .market-price {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--success);
+    }
+
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .qty-btn {
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .qty-count {
+      font-weight: 700;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .status-msg {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      grid-column: 1 / -1;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>Lorcana Card & Price Tracker</h1>
+      <p style="color: var(--text-muted); font-size: 0.85rem;">Reads from <code>src/assets/info/[setnamenospace]ProductsAndPrices.csv</code></p>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-label">Unique Owned</span>
+        <span class="stat-value" id="statUnique">0 / 0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Total Cards</span>
+        <span class="stat-value" id="statTotal">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Collection Value</span>
+        <span class="stat-value" id="statValue">$0.00</span>
+      </div>
+    </div>
+  </header>
+
+  <section class="controls">
+    <div>
+      <select id="setSelector" aria-label="Select Lorcana Set">
+        <option value="D23Promos">D23 Promos</option>
+        <option value="TheFirstChapter">The First Chapter</option>
+        <option value="RiseoftheFloodborn">Rise of the Floodborn</option>
+        <option value="IntotheInklands">Into the Inklands</option>
+        <option value="UrsulasReturn">Ursula's Return</option>
+        <option value="ShimmeringSkies">Shimmering Skies</option>
+        <option value="AzuriteSea">Azurite Sea</option>
+        <option value="ArchaziasIsland">Archazia's Island</option>
+      </select>
+    </div>
+
+    <div>
+      <input type="text" id="searchInput" placeholder="Search name, number, text...">
+    </div>
+
+    <div>
+      <select id="inkFilter">
+        <option value="">All Ink Types</option>
+        <option value="Amber">Amber</option>
+        <option value="Amethyst">Amethyst</option>
+        <option value="Emerald">Emerald</option>
+        <option value="Ruby">Ruby</option>
+        <option value="Sapphire">Sapphire</option>
+        <option value="Steel">Steel</option>
+      </select>
+    </div>
+
+    <div>
+      <select id="rarityFilter">
+        <option value="">All Rarities</option>
+        <option value="Common">Common</option>
+        <option value="Uncommon">Uncommon</option>
+        <option value="Rare">Rare</option>
+        <option value="Super Rare">Super Rare</option>
+        <option value="Legendary">Legendary</option>
+        <option value="Enchanted">Enchanted</option>
+      </select>
+    </div>
+
+    <div>
+      <select id="subtypeFilter">
+        <option value="">All Finishes (Normal & Foil)</option>
+        <option value="Normal">Normal Only</option>
+        <option value="Cold Foil">Cold Foil Only</option>
+      </select>
+    </div>
+
+    <div>
+      <select id="ownedFilter">
+        <option value="all">Show All Cards</option>
+        <option value="owned">Owned Only</option>
+        <option value="missing">Missing Only</option>
+      </select>
+    </div>
+
+    <div style="display: flex; gap: 8px;">
+      <button id="exportBtn" class="secondary" title="Export collection to JSON">Export</button>
+      <button id="importBtn" class="secondary" title="Import collection from JSON">Import</button>
+      <input type="file" id="importFile" accept=".json" style="display: none;">
+    </div>
+  </section>
+
+  <main class="card-grid" id="cardGrid">
+    <div class="status-msg">Loading set data...</div>
+  </main>
+
+  <script>
+    // State Management
+    let currentCards = [];
+    // Collection stored by composite key: `${productId}_${subTypeName}` -> quantity
+    let collection = JSON.parse(localStorage.getItem('lorcana_collection_v1')) || {};
+
+    // DOM Elements
+    const setSelector = document.getElementById('setSelector');
+    const searchInput = document.getElementById('searchInput');
+    const inkFilter = document.getElementById('inkFilter');
+    const rarityFilter = document.getElementById('rarityFilter');
+    const subtypeFilter = document.getElementById('subtypeFilter');
+    const ownedFilter = document.getElementById('ownedFilter');
+    const cardGrid = document.getElementById('cardGrid');
+
+    // RFC-4180 Compliant CSV Parser (Handles quoted commas & newlines inside extDescription/extFlavorText)
+    function parseCSV(text) {
+      const rows = [];
+      let row = [];
+      let cur = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const nextChar = text[i + 1];
+
+        if (inQuotes) {
+if (char === '"' && nextChar === '"') {
+cur += '"';
+i++;
+} else if (char === '"') {
+inQuotes = false;
+} else {
+cur += char;
+}
+} else {
+if (char === '"') {
+inQuotes = true;
+} else if (char === ',') {
+row.push(cur);
+cur = '';
+} else if (char === '\r' && nextChar === '\n') {
+row.push(cur);
+rows.push(row);
+row = [];
+cur = '';
+i++;
+} else if (char === '\n' || char === '\r') {
+row.push(cur);
+rows.push(row);
+row = [];
+cur = '';
+} else {
+cur += char;
+}
+}
+}
+if (cur !== '' || row.length > 0) {
+row.push(cur);
+rows.push(row);
+}
+if (rows.length < 2) return [];
+const headers = rows[0].map(h => h.trim());
+return rows.slice(1)
+.filter(r => r.length === headers.length)
+.map(r => {
+const obj = {};
+headers.forEach((h, idx) => {
+obj[h] = r[idx];
+});
+return obj;
+});
+}
+// Load CSV for selected set
+async function loadSet(setNameNoSpace) {
+cardGrid.innerHTML = <div class="status-msg">Loading <code>src/assets/info/${setNameNoSpace}ProductsAndPrices.csv</code>...</div>;
+try {
+const response = await fetch(src/assets/info/${setNameNoSpace}ProductsAndPrices.csv);
+if (!response.ok) {
+throw new Error(HTTP ${response.status}: Could not find CSV file.);
+}
+const csvText = await response.text();
+const parsed = parseCSV(csvText);
+// Filter out sealed booster boxes/packs (usually lack extNumber or extCardType)
+currentCards = parsed.filter(item => item.extNumber && item.extNumber.trim() !== '');
+// Sort by card number ascending
+currentCards.sort((a, b) => {
+const numA = parseInt(a.extNumber.split('/')[0], 10) || 9999;
+const numB = parseInt(b.extNumber.split('/')[0], 10) || 9999;
+return numA - numB;
+});
+renderCards();
+updateStats();
+} catch (err) {
+cardGrid.innerHTML = <div class="status-msg"> <p style="color: #ef4444; font-weight: bold; margin-bottom: 8px;">Error Loading Set Data</p> <p>${err.message}</p> <p style="font-size: 0.8rem; margin-top: 8px;">Make sure you are running this via a local HTTP server (e.g., <code>python -m http.server</code>) and that <code>src/assets/info/${setNameNoSpace}ProductsAndPrices.csv</code> exists.</p> </div>;
+}
+}
+function getCollectionKey(card) {
+return ${card.productId}_${card.subTypeName || 'Normal'};
+}
+function updateQuantity(key, delta) {
+const current = collection[key] || 0;
+const next = Math.max(0, current + delta);
+if (next === 0) {
+delete collection[key];
+} else {
+collection[key] = next;
+}
+localStorage.setItem('lorcana_collection_v1', JSON.stringify(collection));
+renderCards();
+updateStats();
+}
+function updateStats() {
+let uniqueOwned = 0;
+let totalOwned = 0;
+let totalValue = 0;
+currentCards.forEach(card => {
+const key = getCollectionKey(card);
+const qty = collection[key] || 0;
+if (qty > 0) {
+uniqueOwned++;
+totalOwned += qty;
+const price = parseFloat(card.marketPrice) || parseFloat(card.midPrice) || 0;
+totalValue += price * qty;
+}
+});
+document.getElementById('statUnique').textContent = ${uniqueOwned} / ${currentCards.length};
+document.getElementById('statTotal').textContent = totalOwned;
+document.getElementById('statValue').textContent = $${totalValue.toFixed(2)};
+}
+function renderCards() {
+const query = searchInput.value.toLowerCase().trim();
+const ink = inkFilter.value;
+const rarity = rarityFilter.value;
+const subtype = subtypeFilter.value;
+const ownedMode = ownedFilter.value;
+const filtered = currentCards.filter(card => {
+const key = getCollectionKey(card);
+const qty = collection[key] || 0;
+if (ownedMode === 'owned' && qty === 0) return false;
+if (ownedMode === 'missing' && qty > 0) return false;
+if (ink && card.extInkType !== ink) return false;
+if (rarity && card.extRarity !== rarity) return false;
+if (subtype && card.subTypeName !== subtype) return false;
+if (query) {
+const searchable = ${card.name} ${card.cleanName} ${card.extNumber} ${card.extCharacterVersion} ${card.extClassification} ${card.extDescription}.toLowerCase();
+if (!searchable.includes(query)) return false;
+}
+return true;
+});
+if (filtered.length === 0) {
+cardGrid.innerHTML = <div class="status-msg">No cards match your current filters.</div>;
+return;
+}
+cardGrid.innerHTML = filtered.map(card => {
+const key = getCollectionKey(card);
+const qty = collection[key] || 0;
+const price = parseFloat(card.marketPrice) || parseFloat(card.midPrice) || 0;
+const inkwell = card.extInkwellIcononCard === 'true' || card.extInkwellIcononCard === 'Yes' ? '⬡ Inkable' : '';
+return <article class="card ${qty > 0 ? 'owned' : ''}"> <div class="card-img-wrap"> ${card.extInkType ?${card.extInkType}: ''} ${card.extCostInk ?${card.extCostInk}: ''} <a href="${card.url || '#'}" target="_blank" rel="noopener"> <img src="${card.imageUrl}" alt="${card.cleanName || card.name}" loading="lazy"> </a> </div> <div class="card-body"> <div class="card-meta"> <span>#${card.extNumber} • ${card.extRarity || 'N/A'}</span> <span>${card.subTypeName || 'Normal'}</span> </div> <div class="card-title">${card.cleanName || card.name}</div> ${card.extCharacterVersion ?${card.extCharacterVersion}` : ''}
+${card.extStrength ? <span>⚔️ ${card.extStrength}</span> : ''}
+${card.extWillpower ? <span>🛡️ ${card.extWillpower}</span> : ''}
+${card.extLoreValue ? <span>◊ ${card.extLoreValue}</span> : ''}
+${inkwell ? <span style="margin-left:auto; color: var(--accent);">${inkwell}</span> : ''}
+Market Price
+$${price.toFixed(2)}
+
+
+-
+${qty}
++
+
+
+
+
+`;
+}).join('');
+}
+// Event Listeners
+setSelector.addEventListener('change', (e) => loadSet(e.target.value));
+searchInput.addEventListener('input', renderCards);
+inkFilter.addEventListener('change', renderCards);
+rarityFilter.addEventListener('change', renderCards);
+subtypeFilter.addEventListener('change', renderCards);
+ownedFilter.addEventListener('change', renderCards);
+// Export / Import Backup
+document.getElementById('exportBtn').addEventListener('click', () => {
+const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(collection, null, 2));
+const dlAnchor = document.createElement('a');
+dlAnchor.setAttribute("href", dataStr);
+dlAnchor.setAttribute("download", "lorcana_collection_backup.json");
+dlAnchor.click();
+});
+document.getElementById('importBtn').addEventListener('click', () => {
+document.getElementById('importFile').click();
+});
+document.getElementById('importFile').addEventListener('change', (e) => {
+const file = e.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = (event) => {
+try {
+collection = JSON.parse(event.target.result);
+localStorage.setItem('lorcana_collection_v1', JSON.stringify(collection));
+renderCards();
+updateStats();
+alert('Collection imported successfully!');
+} catch (err) {
+alert('Invalid JSON backup file.');
+}
+};
+reader.readAsText(file);
+});
+// Initial Load
+loadSet(setSelector.value);
+</script>
+</body>
+</html>
